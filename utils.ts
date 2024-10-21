@@ -2,7 +2,7 @@
 Helper functions to parse command input and run the appropriate command.
 */
 
-import { LRangeParams, SetParams } from "./types";
+import { HSetParams, LRangeParams, SetParams } from "./types";
 
 const parseSetParams = (command: string[]) => {
   // Check for minimum number of arguments
@@ -128,11 +128,38 @@ const parseLrangeParams = (command: string[]) => {
   return params;
 }
 
+const parseHsetParams = (command: string[]) => {
+  // Check for minimum number of arguments
+  if (command.length < 4 || command.length % 2 !== 0) {
+    return new Error("HSET requires field-value pairs");
+  }
+
+  const params: HSetParams = { key: command[1], fields: {} };
+
+  // Note, overwrites duplicate fields
+  for (let i = 2; i < command.length; i += 2) {
+    params.fields[command[i]] = command[i + 1];
+  }
+
+  return params;
+}
+
+const parseHgetParams = (command: string[]) => {
+  // Check for minimum number of arguments
+  if (command.length !== 3) {
+    return new Error("HGET requires 2 arguments");
+  }
+
+  return { key: command[1], field: command[2] };
+}
+
 export { 
   parseSetParams, 
   parseGetParams, 
   parseDeleteParams, 
   parseLpushParams, 
   parseLpopParams,
-  parseLrangeParams
+  parseLrangeParams,
+  parseHsetParams,
+  parseHgetParams
 };

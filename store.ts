@@ -1,22 +1,10 @@
-import { Entry, LRangeParams, SetParams, StoreValue } from "./types";
+import { Entry, HSetParams, LRangeParams, SetParams, StoreValue } from "./types";
 
 class Store {
   private store: Map<string, Entry>;
 
   constructor() {
     this.store = new Map<string, Entry>();
-  }
-
-  // Check if value is correct type for key
-  public isValidType(value: StoreValue, expectedType: "string" | "list" | "hash"): boolean {
-    if (expectedType === "string") {
-      return typeof value === "string";
-    } else if (expectedType === "list") {
-      return Array.isArray(value);
-    } else if (expectedType === "hash") {
-      return value instanceof Map;
-    }
-    return false;
   }
 
   // Lazily expire keys, check if key is expired and delete if necessary
@@ -30,6 +18,7 @@ class Store {
   }
 
   // Set key to value
+  // Note: overwrites existing key regardless of type
   public set({ key, value, nx, xx, get, ttl, keepTtl }: SetParams) {
     this.deleteExpiredKey(key);
 
@@ -43,13 +32,8 @@ class Store {
       return new Error("Key does not exist");
     }
 
-    // Check if value is correct type
-    if (!this.isValidType(value, "string")) {
-      return new Error("Invalid value type");
-    }
-
-    // Create new entry if key does not exist
-    if (!this.store.has(key)) {
+    // Create new entry if key does not exist or is not a string
+    if (!this.store.has(key) || this.store.get(key)!.type !== "string") {
       const entry: Entry = { type: "string", value: value };
       this.store.set(key, entry);
     } 
@@ -73,7 +57,8 @@ class Store {
   public get(key: string) {
     this.deleteExpiredKey(key);
 
-    if (this.store.has(key) && !this.isValidType(this.store.get(key)!.value, "string")) {
+    // Type check
+    if (this.store.has(key) && this.store.get(key)!.type !== "string") {
       return new Error("Value is not a string");
     }
 
@@ -104,7 +89,7 @@ class Store {
     const entry = this.store.get(key)!;
 
     // Check if value is a list
-    if (!this.isValidType(entry.value, "list")) {
+    if (entry.type !== "list") {
       return new Error("Value is not a list");
     }
 
@@ -125,8 +110,8 @@ class Store {
 
     const entry = this.store.get(key)!;
 
-    // Check if value is a list
-    if (!this.isValidType(entry.value, "list")) {
+    // Type check
+    if (entry.type !== "list") {
       return new Error("Value is not a list");
     }
 
@@ -153,8 +138,8 @@ class Store {
 
     const entry = this.store.get(key)!;
 
-    // Check if value is a list
-    if (!this.isValidType(entry.value, "list")) {
+    // Type check
+    if (entry.type !== "list") {
       return new Error("Value is not a list");
     }
 
@@ -182,6 +167,56 @@ class Store {
     
     // Return range, INCLUSIVE of start and stop
     return values.slice(start, stop + 1);
+  }
+
+  public hset({ key, fields }: HSetParams) {
+    this.deleteExpiredKey(key);
+
+    // Check if key already exists
+    if (!this.store.has(key)) {
+      const entry: Entry = { type: "hash", value: new Map<string, string>() };
+      this.store.set(key, entry);
+    }
+
+    const entry = this.store.get(key)!;
+
+    // Check if value is a hash
+    if (entry.type !== "hash") {
+      return new Error("Value is not a hash");
+    }
+
+    const map = entry.value as Map<string, string>;
+
+    // Overwrite fields if they already exist
+    let count = 0;
+    for (const field in fields) {
+      if (!map.has(field)) {
+        count++;
+      }
+      map.set(field, fields[field]);
+    }
+
+    return count;
+  }
+
+  public hget({ key, field }: { key: string, field: string } ) {
+    this.deleteExpiredKey(key);
+
+    // Check if key exists
+    if (!this.store.has(key)) {
+      return null;
+    }
+
+    const entry = this.store.get(key)!;
+
+    // Type check
+    if (entry.type !== "hash") {
+      return new Error("Value is not a hash");
+    }
+
+    const map = entry.value as Map<string, string>;
+
+    return map.get(field) ?? null;
   }
 }
 

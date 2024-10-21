@@ -1,31 +1,6 @@
-/*
-The Problem
-Redis is a popular in-memory data store. Many cloud software companies use it as a caching layer, database, streaming engine or message broker. At its core Redis stores key value pairs. Your task will be to implement some parts of Redis including in memory key/value storage and a few Redis commands.
-Your Solution
-● Will only store values in memory. You do not need to write anything to disk/file.
-● When the program starts it will prompt for the command to run.
-● Once the user inputs the command, assuming the command is valid, the command will operate.
-● DO NOT use a redis library/redis database. You are building the redis database/commands.
-● Must implement the following commands: SET, GET, DEL
-● Bonus points for this set of commands: LPUSH, LPOP, LRANGE
-● Even more bonus points for this set of commands: HSET, HGET
-● Additional commands do not earn bonus points.
-● Example program execution:
-○ > What is your command?
-○ >> SET myvalue GoQuiq
-○ >OK
-○ > What is your command?
-○ >> GET myvalue
-○ > “GoQuiq”
-● The data storage does NOT need to persist after the program is ended/killed.
-● Please include a README file that describes any assumptions you made and also highlights
-anything about your solution you’d like us to know
-● Although Quiq appreciates and requires folks with UX experience, there are no “bonus points” for
-advanced user interface on this particular challenge. Our expectation is that this would be used as a command line tool. Please focus your efforts on the nuts and bolts of Redis.
-*/
 import { createInterface } from "readline";
 import { INSTRUCTIONS, COMMAND_DESCRIPTIONS } from "./strings";
-import { parseDeleteParams, parseGetParams, parseSetParams, parseLpushParams, parseLpopParams, parseLrangeParams } from "./utils";
+import { parseDeleteParams, parseGetParams, parseSetParams, parseLpushParams, parseLpopParams, parseLrangeParams, parseHsetParams, parseHgetParams } from "./utils";
 import Store from "./store";
 
 const inputReader = createInterface({
@@ -43,6 +18,7 @@ function handleExit() {
   process.exit(0);
 }
 
+// Format and output list
 function handleListOutput(list: string[] | Error | null) {
   if (list instanceof Error) {
     console.log(list.message);
@@ -66,12 +42,12 @@ function handleCommand(input: string, store: Store) {
       console.log(COMMAND_DESCRIPTIONS);
       break;
     case "SET":
-      const params = parseSetParams(command);
-      if (params instanceof Error) {
-        console.log(params.message);
+      const setParams = parseSetParams(command);
+      if (setParams instanceof Error) {
+        console.log(setParams.message);
         break;
       }
-      const result = store.set(params);
+      const result = store.set(setParams);
       if (result instanceof Error) {
         console.log(result.message);
         break;
@@ -132,8 +108,30 @@ function handleCommand(input: string, store: Store) {
       handleListOutput(range);
       break;
     case "HSET":
+      const hsetParams = parseHsetParams(command);
+      if (hsetParams instanceof Error) {
+        console.log(hsetParams.message);
+        break;
+      }
+      const hsetResult = store.hset(hsetParams);
+      if (hsetResult instanceof Error) {
+        console.log(hsetResult.message);
+        break;
+      }
+      console.log(hsetResult);
       break;
     case "HGET":
+      const hgetParams = parseHgetParams(command);
+      if (hgetParams instanceof Error) {
+        console.log(hgetParams.message);
+        break;
+      }
+      const hgetResult = store.hget(hgetParams);
+      if (hgetResult instanceof Error) {
+        console.log(hgetResult.message);
+        break;
+      }
+      console.log(hgetResult);
       break;
     case "EXIT":
       inputReader.close();

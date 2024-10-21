@@ -22,4 +22,9 @@ type LRangeParams = {
   stop: number;
 }
 
-export { SetParams, StoreValue, Entry, LRangeParams };
+type HSetParams = { 
+  key: string, 
+  fields: Record<string, string>
+}
+
+export { SetParams, StoreValue, Entry, LRangeParams, HSetParams };
