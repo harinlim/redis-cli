@@ -2,7 +2,7 @@ export const INSTRUCTIONS: string = `
 Welcome to Redis CLI.
 
 Commands:
-SET key value [NX|XX] [GET] [EX seconds | PX milliseconds]
+SET key value [NX|XX] [GET] [EX seconds | PX milliseconds | KEEPTTL]
 GET key
 DEL key [key ...]
 LPUSH key value [value ...]
@@ -24,7 +24,7 @@ SET key value [NX|XX] [GET] [EX seconds | PX milliseconds | KEEPTTL]
         - GET: Return the value of the key after setting the value.
         - EX seconds: Set the specified expire time, in seconds.
         - PX milliseconds: Set the specified expire time, in milliseconds.
-        - KEEPTTL: Retain the time to live associated with the key.
+        - KEEPTTL: Retain the time to live already associated with the key.
 GET key                                                     
     Description: Get the string value of a key
     Returns: The value of the key or null if it doesn't exist.
@@ -45,7 +45,7 @@ LPOP key [count]
         - count: The number of elements to remove.
 LRANGE key start stop
     Description: Get a range of elements from a list.
-    Returns: A list of elements in the specified range.
+    Returns: A list of elements in the specified range, inclusive of stop.
 HSET key field value [field value ...]
     Description: Set the string value of a hash field.
     Returns: Number of successfully set fields.

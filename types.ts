@@ -16,4 +16,10 @@ type SetParams = {
   keepTtl?: boolean;
 }
 
-export { SetParams, StoreValue, Entry };
+type LRangeParams = {
+  key: string;
+  start: number;
+  stop: number;
+}
+
+export { SetParams, StoreValue, Entry, LRangeParams };

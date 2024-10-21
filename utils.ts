@@ -2,7 +2,7 @@
 Helper functions to parse command input and run the appropriate command.
 */
 
-import { SetParams } from "./types";
+import { LRangeParams, SetParams } from "./types";
 
 const parseSetParams = (command: string[]) => {
   // Check for minimum number of arguments
@@ -80,5 +80,59 @@ const parseDeleteParams = (command: string[]) => {
   return command.slice(1);
 }
 
+const parseLpushParams = (command: string[]) => {
+  // Check for minimum number of arguments
+  if (command.length < 3) {
+    return new Error("LPUSH requires at least 2 arguments");
+  }
 
-export { parseSetParams, parseGetParams, parseDeleteParams };
+  return { key: command[1], values: command.slice(2) };
+}
+
+const parseLpopParams = (command: string[]) => {
+  // Check for minimum number of arguments
+  if (command.length < 2) {
+    return new Error("LPOP requires at least 1 argument");
+  }
+
+  const params = { key: command[1], count: 1 };
+
+  // Check for optional count argument
+  if (command.length > 2) {
+    if (isNaN(parseInt(command[2]))) {
+      return new Error("Invalid count argument");
+    }
+    params.count = parseInt(command[2]);
+  }
+
+  return params;
+}
+
+const parseLrangeParams = (command: string[]) => {
+  // Check for minimum number of arguments
+  if (command.length !== 4) {
+    return new Error("LRANGE requires 3 arguments");
+  }
+
+  // Check for start and stop arguments
+  if (isNaN(parseInt(command[2])) || isNaN(parseInt(command[3]))) {
+    return new Error("Invalid start or stop argument");
+  }
+
+  const params: LRangeParams = { 
+    key: command[1], 
+    start: parseInt(command[2]), 
+    stop: parseInt(command[3]) 
+  };
+
+  return params;
+}
+
+export { 
+  parseSetParams, 
+  parseGetParams, 
+  parseDeleteParams, 
+  parseLpushParams, 
+  parseLpopParams,
+  parseLrangeParams
+};

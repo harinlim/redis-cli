@@ -25,7 +25,7 @@ advanced user interface on this particular challenge. Our expectation is that th
 */
 import { createInterface } from "readline";
 import { INSTRUCTIONS, COMMAND_DESCRIPTIONS } from "./strings";
-import { parseDeleteParams, parseGetParams, parseSetParams } from "./utils";
+import { parseDeleteParams, parseGetParams, parseSetParams, parseLpushParams, parseLpopParams, parseLrangeParams } from "./utils";
 import Store from "./store";
 
 const inputReader = createInterface({
@@ -43,11 +43,25 @@ function handleExit() {
   process.exit(0);
 }
 
+function handleListOutput(list: string[] | Error | null) {
+  if (list instanceof Error) {
+    console.log(list.message);
+    return
+  }
+
+  if (list === null) {
+    console.log(list);
+    return;
+  }
+
+  list.forEach((value, index) => console.log(`${index + 1}) ${value}`));
+}
+
 function handleCommand(input: string, store: Store) {
   // Parse input and convert to argument array
-  const command = input.trim().split(" ").map((x) => x.toUpperCase());
+  const command = input.trim().split(/\s+/);
   
-  switch (command[0]) {
+  switch (command[0].toUpperCase()) {
     case "HELP":
       console.log(COMMAND_DESCRIPTIONS);
       break;
@@ -71,6 +85,10 @@ function handleCommand(input: string, store: Store) {
         break;
       }
       const value = store.get(key);
+      if (value instanceof Error) {
+        console.log(value.message);
+        break;
+      }
       console.log(value);
       break;
     case "DEL":
@@ -83,10 +101,35 @@ function handleCommand(input: string, store: Store) {
       console.log(count + " key" + (count === 1 ? "" : "s") + " removed");
       break;
     case "LPUSH":
+      const lpushParams = parseLpushParams(command);
+      if (lpushParams instanceof Error) {
+        console.log(lpushParams.message);
+        break;
+      }
+      const length = store.lpush(lpushParams);
+      if (length instanceof Error) {
+        console.log(length.message);
+        break;
+      }
+      console.log(length);
       break;
     case "LPOP":
+      const lpopParams = parseLpopParams(command);
+      if (lpopParams instanceof Error) {
+        console.log(lpopParams.message);
+        break;
+      }
+      const popped = store.lpop(lpopParams);
+      handleListOutput(popped);
       break;
     case "LRANGE":
+      const lrangeParams = parseLrangeParams(command);
+      if (lrangeParams instanceof Error) {
+        console.log(lrangeParams.message);
+        break;
+      }
+      const range = store.lrange(lrangeParams);
+      handleListOutput(range);
       break;
     case "HSET":
       break;
