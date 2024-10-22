@@ -1,4 +1,4 @@
-import { Entry, HSetParams, LRangeParams, SetParams, StoreValue } from "./types";
+import { Entry, HSetParams, LRangeParams, SetParams } from "./types";
 
 class Store {
   private store: Map<string, Entry>;
@@ -93,7 +93,7 @@ class Store {
       return new Error("Value is not a list");
     }
 
-    // In reailty, LPUSH would add to the head of the list
+    // In reality, LPUSH would add to the head of the list
     // But for simplicity, we'll just add to the end and retrieve
     // in reverse. If RPUSH is implemented, we can change this
     // by unshifting values or using a doubly linked list.
@@ -165,8 +165,9 @@ class Store {
       stop = values.length + stop;
     }
     
-    // Return range, INCLUSIVE of start and stop
-    return values.slice(start, stop + 1);
+    // Return range, INCLUSIVE of start and stop, indexing from end of array + reversing to
+    // account for lpush/pop optimization (going from opposite side)
+    return values.slice(values.length - 1 - stop, values.length - 1 - start + 1).reverse();
   }
 
   public hset({ key, fields }: HSetParams) {
