@@ -12,7 +12,8 @@ HSET key field value [field value ...]
 HGET key field
 
 Type 'HELP' to see more details about command options.
-`
+`;
+
 export const COMMAND_DESCRIPTIONS: string = `
 Redis Commands:
 SET key value [NX|XX] [GET] [EX seconds | PX milliseconds | KEEPTTL]  
@@ -58,4 +59,4 @@ HGET key field
 CLI Commands:
 HELP - Show this help message.
 EXIT - Exit the CLI. Warning: Data will not persist.
-`
+`;
